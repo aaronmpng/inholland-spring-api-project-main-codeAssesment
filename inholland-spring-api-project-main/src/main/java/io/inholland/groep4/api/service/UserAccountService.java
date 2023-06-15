@@ -3,62 +3,54 @@ import io.inholland.groep4.api.model.DTO.UserAccountDTO;
 import io.inholland.groep4.api.model.User;
 import io.inholland.groep4.api.model.UserAccount;
 import io.inholland.groep4.api.repository.UserAccountRepository;
+import io.inholland.groep4.api.repository.UserRepository;
 import org.iban4j.CountryCode;
 import org.iban4j.Iban;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import javax.servlet.http.HttpServletRequest;
-import java.security.Principal;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserAccountService {
-    private final HttpServletRequest request;
 
     @Autowired
     private UserAccountRepository userAccountRepository;
-    @Autowired
-    private UserService userService;
 
-    public UserAccountService(HttpServletRequest request) {
-        this.request = request;
-    }
     public UserAccount setAccount(UserAccountDTO userAccount)
     {
         // Create a new account
         UserAccount account = new UserAccount();
 
-        // Set the properties
-        account.setOwner(userAccount.getOwner());
+        // Set account type
+        UserAccount.AccountTypeEnum accountType = userAccount.getAccountType();
+        if (accountType != UserAccount.AccountTypeEnum.CURRENT && accountType != UserAccount.AccountTypeEnum.SAVINGS) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect account type given");
+        }
+        account.setAccountType(accountType);
 
-        if(userAccount.getAccountType().equals(UserAccount.AccountTypeEnum.CURRENT) || userAccount.getAccountType().equals(UserAccount.AccountTypeEnum.SAVINGS))
-        {
-            account.setAccountType(userAccount.getAccountType());
+        // Set lower limit
+        Double lowerLimit = userAccount.getLowerLimit();
+        if (lowerLimit < 100.0 || lowerLimit > 10000.0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect lower limit given");
         }
-        else
-        {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Incorrect account type given");
-        }
+        account.setLowerLimit(lowerLimit);
 
-        if(userAccount.getLowerLimit() < 100.0 || userAccount.getLowerLimit() > 10000.0)
-        {
-            System.out.println("limit");
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Incorrect lower limit given");
+        // Set account status
+        UserAccount.AccountStatusEnum accountStatus = userAccount.getAccountStatus();
+        if (accountStatus != UserAccount.AccountStatusEnum.ACTIVE && accountStatus != UserAccount.AccountStatusEnum.INACTIVE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect account status given");
         }
-        else {
-            account.setLowerLimit(userAccount.getLowerLimit());
-        }
+        account.setAccountStatus(accountStatus);
 
-        if(userAccount.getAccountStatus().equals(UserAccount.AccountStatusEnum.ACTIVE) || userAccount.getAccountStatus().equals(UserAccount.AccountStatusEnum.INACTIVE))
-        {
-            account.setAccountStatus(userAccount.getAccountStatus());
+        // Set account balance
+        Double accountBalance = userAccount.getAccountBalance();
+        if (accountBalance < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect account balance given");
         }
-        else {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Incorrect account status given");
-        }
+        account.setAccountBalance(accountBalance);
+
         return account;
     }
 
@@ -73,7 +65,7 @@ public class UserAccountService {
             return userAccount;
         }
         catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Incorrect iban given");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect iban given");
         }
     }
 
@@ -89,43 +81,37 @@ public class UserAccountService {
         return iban.toString();
     }
 
-    public Optional<List<UserAccount>> getAllAccounts() {
+    public List<UserAccount> getAllAccounts(User user, Boolean role) {
         try {
-            // Create an empty list for accounts
-            Optional<List<UserAccount>> accounts;
-
-            // Check the role of the user
-            if (request.isUserInRole("ROLE_EMPLOYEE")){
+            if (role.equals(true)) {
                 // User is an employee, getting all accounts
-                accounts = Optional.of(userAccountRepository.findAll());
-            } else {
-                // Get the user accounts
-                Principal principal = request.getUserPrincipal();
-
-                // Get the current user
-                User user = userService.findByUsername(principal.getName());
-
-                // Get the user accounts
-                accounts = getAccountsByUser(user);
+                return userAccountRepository.findAll();
             }
-            return accounts;
+            else {
+                // Get the user accounts
+                List<UserAccount> userAccounts = getAccountsByUser(user);
+                if (userAccounts.isEmpty()) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User accounts not found");
+                }
+                return userAccounts;
+            }
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Account not found");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error retrieving user accounts", e);
         }
     }
 
-    public UserAccount getAccountById(Long id) {
-        if (userAccountRepository.getUserAccountById(id) == null) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Account not found");
+    public UserAccount getAccountById(Long id, User user, Boolean role) {
+        UserAccount account = userAccountRepository.getUserAccountById(id);
+        if (account == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
         }
-        UserAccount account = new UserAccount();
-        Principal principal = request.getUserPrincipal();
-        User user = userService.findByUsername(principal.getName());
+
         // Check if the user is an employee or account owner
-        if (request.isUserInRole("ROLE_EMPLOYEE") || checkIfAccountBelongsToOwner(user, id)) {
-            account = userAccountRepository.getUserAccountById(id);
+        if (role.equals(true) || checkIfAccountBelongsToOwner(user, id)) {
+            return account;
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
-        return account;
     }
 
     public boolean checkIfAccountBelongsToOwner(User user, Long id) {
@@ -137,16 +123,18 @@ public class UserAccountService {
 
     public UserAccount save(UserAccount user) {
         if (userAccountRepository.getUserAccountById(user.getId()) == null) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "No account to save");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No account to save");
         }
         return userAccountRepository.save(user);
     }
 
-    public Optional<List<UserAccount>> getAccountsByUser(User user) {
-        if (!userAccountRepository.getUserAccountsByOwner(user).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "User account found");
+
+    public List<UserAccount> getAccountsByUser(User user) {
+        List<UserAccount> userAccounts = userAccountRepository.getUserAccountsByOwner(user);
+        if (userAccounts.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
         }
-        return userAccountRepository.getUserAccountsByOwner(user);
+        return userAccounts;
     }
 
     public boolean existByIBAN(String iban) {

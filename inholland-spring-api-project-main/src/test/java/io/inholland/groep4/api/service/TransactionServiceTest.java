@@ -48,8 +48,10 @@ public class TransactionServiceTest {
 
     @Test
     public void createTransactionSuccessfullyShouldReturnObject() {
-        testEmployeeAccount1 = userAccountService.getAccountById(6L);
-        testEmployeeAccount2 = userAccountService.getAccountById(7L);
+        User user = new User();
+        boolean role = true;
+        testEmployeeAccount1 = userAccountService.getAccountById(6L, user, role);
+        testEmployeeAccount2 = userAccountService.getAccountById(7L, user, role);
 
         transaction.setSender(testEmployeeAccount1.getIBAN());
         transaction.setReceiver(testEmployeeAccount2.getIBAN());
@@ -65,8 +67,10 @@ public class TransactionServiceTest {
 
     @Test
     public void createTransactionWithInsufficientFundsShouldReturnObjectWithRejectionFlag() {
-        testEmployeeAccount1 = userAccountService.getAccountById(6L);
-        testEmployeeAccount2 = userAccountService.getAccountById(7L);
+        User user = new User();
+        boolean role = true;
+        testEmployeeAccount1 = userAccountService.getAccountById(6L, user, role);
+        testEmployeeAccount2 = userAccountService.getAccountById(7L, user, role);
 
         transaction.setSender(testEmployeeAccount1.getIBAN());
         transaction.setReceiver(testEmployeeAccount2.getIBAN());
@@ -80,8 +84,10 @@ public class TransactionServiceTest {
 
     @Test
     public void createTransactionWithInactiveSenderAccountShouldReturnObjectWithRejectionFlag() {
-        testEmployeeAccount1 = userAccountService.getAccountById(10L);
-        testEmployeeAccount2 = userAccountService.getAccountById(7L);
+        User user = new User();
+        boolean role = true;
+        testEmployeeAccount1 = userAccountService.getAccountById(10L, user, role);
+        testEmployeeAccount2 = userAccountService.getAccountById(7L, user, role);
 
         transaction.setSender(testEmployeeAccount1.getIBAN());
         transaction.setReceiver(testEmployeeAccount2.getIBAN());
@@ -95,8 +101,10 @@ public class TransactionServiceTest {
 
     @Test
     public void createTransactionWithInactiveReceiverAccountShouldReturnObjectWithRejectionFlag() {
-        testEmployeeAccount1 = userAccountService.getAccountById(6L);
-        testEmployeeAccount2 = userAccountService.getAccountById(11L);
+        User user = new User();
+        boolean role = true;
+        testEmployeeAccount1 = userAccountService.getAccountById(6L, user, role);
+        testEmployeeAccount2 = userAccountService.getAccountById(11L, user, role);
 
         transaction.setSender(testEmployeeAccount1.getIBAN());
         transaction.setReceiver(testEmployeeAccount2.getIBAN());
@@ -110,8 +118,10 @@ public class TransactionServiceTest {
 
     @Test
     public void createTransactionFromSavingsToRemoteCurrentAccountShouldReturnObjectWithRejectionFlag() {
-        testEmployeeAccount1 = userAccountService.getAccountById(6L);
-        testEmployeeAccount2 = userAccountService.getAccountById(12L);
+        User user = new User();
+        boolean role = true;
+        testEmployeeAccount1 = userAccountService.getAccountById(6L, user,role);
+        testEmployeeAccount2 = userAccountService.getAccountById(12L, user,role);
 
         transaction.setSender(testEmployeeAccount1.getIBAN());
         transaction.setReceiver(testEmployeeAccount2.getIBAN());
@@ -125,8 +135,10 @@ public class TransactionServiceTest {
 
     @Test
     public void createTransactionFromCurrentToRemoteSavingsAccountShouldReturnObjectWithRejectionFlag() {
-        testEmployeeAccount1 = userAccountService.getAccountById(13L);
-        testEmployeeAccount2 = userAccountService.getAccountById(7L);
+        User user = new User();
+        boolean role = true;
+        testEmployeeAccount1 = userAccountService.getAccountById(13L, user,role);
+        testEmployeeAccount2 = userAccountService.getAccountById(7L, user,role);
 
         transaction.setSender(testEmployeeAccount1.getIBAN());
         transaction.setReceiver(testEmployeeAccount2.getIBAN());
@@ -140,8 +152,10 @@ public class TransactionServiceTest {
 
     @Test
     public void createTransactionOfAnAmountOfZeroShouldReturnObjectWithRejectionFlag() {
-        testEmployeeAccount1 = userAccountService.getAccountById(6L);
-        testEmployeeAccount2 = userAccountService.getAccountById(7L);
+        User user = new User();
+        boolean role = true;
+        testEmployeeAccount1 = userAccountService.getAccountById(6L, user,role);
+        testEmployeeAccount2 = userAccountService.getAccountById(7L, user,role);
 
         transaction.setSender(testEmployeeAccount1.getIBAN());
         transaction.setReceiver(testEmployeeAccount2.getIBAN());
@@ -155,8 +169,10 @@ public class TransactionServiceTest {
 
     @Test
     public void createTransactionOfANegativeAmountShouldReturnObjectWithRejectionFlag() {
-        testEmployeeAccount1 = userAccountService.getAccountById(6L);
-        testEmployeeAccount2 = userAccountService.getAccountById(7L);
+        User user = new User();
+        boolean role = true;
+        testEmployeeAccount1 = userAccountService.getAccountById(6L, user,role);
+        testEmployeeAccount2 = userAccountService.getAccountById(7L, user,role);
 
         transaction.setSender(testEmployeeAccount1.getIBAN());
         transaction.setReceiver(testEmployeeAccount2.getIBAN());

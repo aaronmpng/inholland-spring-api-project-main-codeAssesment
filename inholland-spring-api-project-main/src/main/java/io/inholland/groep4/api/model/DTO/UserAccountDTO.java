@@ -1,6 +1,5 @@
 package io.inholland.groep4.api.model.DTO;
 
-import io.inholland.groep4.api.model.User;
 import io.inholland.groep4.api.model.UserAccount;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -18,7 +17,7 @@ public class UserAccountDTO {
 
     @Schema(example = "1", required = true, description = "")
     @NotNull
-    private User owner;
+    private int owner;
 
     @Schema(example = "100", required = true, description = "")
     @NotNull
@@ -27,4 +26,8 @@ public class UserAccountDTO {
     @Schema(example = "active", required = true, description = "")
     @NotNull
     private UserAccount.AccountStatusEnum accountStatus;
+
+    private Double accountBalance;
+
+
 }

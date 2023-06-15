@@ -14,10 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 public class UserAccountTest {
     private UserAccount testUserAccount;
-    private HttpServletRequest request;
-
     @Autowired
-    UserAccountService service = new UserAccountService(request);
+    UserAccountService service = new UserAccountService();
 
     @BeforeEach
     void setup() {

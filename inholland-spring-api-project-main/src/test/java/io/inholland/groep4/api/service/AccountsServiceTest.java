@@ -31,7 +31,9 @@ public class AccountsServiceTest {
 
     @Test
     public void gettingAllAccountsShouldGiveListOAccounts() {
-        Optional<List<UserAccount>> accounts = userAccountService.getAllAccounts();
+        User user = new User();
+        Boolean test = true;
+        List<UserAccount> accounts = userAccountService.getAllAccounts(user, test);
 
         assertThat(accounts).isNotEmpty();
     }
@@ -39,7 +41,9 @@ public class AccountsServiceTest {
     @Test
     public void gettingAccountsByIdShouldGiveAccount() {
         Long idToFind = 1L;
-        UserAccount account = userAccountService.getAccountById(idToFind);
+        User user = new User();
+        boolean role = true;
+        UserAccount account = userAccountService.getAccountById(idToFind, user, role);
 
         assertThat(account).isNotNull();
         assertThat(account.getAccountBalance()).isEqualTo(500.0);
@@ -48,9 +52,11 @@ public class AccountsServiceTest {
     @Test
     public void gettingAccountWithWrongIDShouldThrowException() {
         Long idToFind = 100L;
+        User user = new User();
+        boolean role = true;
 
         Exception exception = assertThrows(ResponseStatusException.class, () -> {
-            userAccountService.getAccountById(idToFind);
+            userAccountService.getAccountById(idToFind, user, role);
         });
 
         assertTrue(exception.getMessage().contains("Id not found"));
@@ -60,7 +66,7 @@ public class AccountsServiceTest {
     public void gettingAccountByUserShouldGiveUserAccount() {
         String usernameToFind = "test-employee1";
         User username = userService.findByUsername(usernameToFind);
-        Optional<List<UserAccount>> userAccounts = userAccountService.getAccountsByUser(username);
+        List<UserAccount> userAccounts = userAccountService.getAccountsByUser(username);
 
         assertThat(userAccounts).isNotEmpty();
     }
@@ -148,7 +154,9 @@ public class AccountsServiceTest {
     @Test
     public void savingUserAccount() {
         Long idToFind = 1L;
-        UserAccount account = userAccountService.getAccountById(idToFind);
+        User user = new User();
+        boolean role = true;
+        UserAccount account = userAccountService.getAccountById(idToFind, user, role);
         UserAccount userAccount = userAccountService.save(account);
 
         assertThat(userAccount.getAccountBalance()).isEqualTo(500.0);
@@ -157,9 +165,11 @@ public class AccountsServiceTest {
     @Test
     public void generatingAlreadyExistedIBAN() {
         String IBAN = userAccountService.getIBAN();
+        User user = new User();
+        boolean role = true;
 
         Long idToFind = 1L;
-        UserAccount account = userAccountService.getAccountById(idToFind);
+        UserAccount account = userAccountService.getAccountById(idToFind, user, role);
         UserAccount userAccount = userAccountService.save(account);
 
         if (IBAN.equals(userAccount.getIBAN())) {
